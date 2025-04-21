@@ -1,4 +1,9 @@
-export type Period = 'daily' | 'weekly' | 'monthly' | 'quarterly'
+// Re-export all types
+export * from './opportunities'
+
+// Other type definitions you might need
+export type Period = 'day' | 'week' | 'month' | 'quarter' | 'year'
+export type Range = 'current' | 'previous' | 'ytd'
 
 export interface Range {
   start: Date
