@@ -24,6 +24,19 @@ export default defineEventHandler(async (event) => {
     const token = getCookie(event, 'pipedrive_token')
     return { token }
   }
+  
+  async function saveToken() {
+    try {
+      const res = await $fetch('/api/pipedrive/tokens', {
+        method: 'POST',
+        body: { token: state.token }
+      })
+      console.log('Token save response:', res)
+      saved.value = true
+    } catch (err) {
+      console.error('Token save failed:', err)
+    }
+  }
 
   return { error: 'Unsupported method' }
 })

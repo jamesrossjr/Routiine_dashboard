@@ -1,42 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
-const pipedriveToken = ref('')
-const loading = ref(false)
 const toast = useToast()
+const saved = ref(false)
+const loading = ref(false)
 
-// Load existing token (if available from cookie)
+// Required for UForm: create a reactive state object
+const state = reactive({
+  pipedriveToken: ''
+})
+
+// Load saved token from cookie when component mounts
 onMounted(async () => {
   try {
     const res = await $fetch('/api/pipedrive/tokens')
-
     if ('token' in res && typeof res.token === 'string') {
-      pipedriveToken.value = res.token
+      state.pipedriveToken = res.token
     }
   } catch (e) {
     console.warn('Unable to fetch Pipedrive token.', e)
   }
-  type TokenResponse = { token: string } | { error: string } | { status: string }
-
-const res = await $fetch<TokenResponse>('/api/pipedrive/tokens')
 })
 
+// Save token via POST request
 async function saveToken() {
   loading.value = true
   try {
-    await $fetch('/api/pipedrive/tokens', {
+    const res = await $fetch('/api/pipedrive/tokens', {
       method: 'POST',
-      body: { token: pipedriveToken.value }
+      body: { token: state.pipedriveToken }
     })
-    toast.add({
-      title: 'Token Saved',
-      description: 'Pipedrive API token connected successfully.',
-      color: 'success'
-    })
-  } catch (error) {
+
+    if ('status' in res && res.status === 'success') {
+      saved.value = true
+      toast.add({
+        title: 'Success',
+        description: 'Your Pipedrive API token has been saved.',
+        color: 'success'
+      })
+    } else {
+      throw new Error('Invalid response from server.')
+    }
+  } catch (err) {
+    console.error('Token save failed:', err)
     toast.add({
       title: 'Error',
-      description: 'Failed to save Pipedrive token.',
+      description: 'Failed to save token. Check the console for details.',
       color: 'error'
     })
   } finally {
@@ -49,17 +58,17 @@ async function saveToken() {
   <UCard class="border border-gray-200 dark:border-gray-800 rounded-xl">
     <template #header>
       <div class="flex flex-col space-y-1">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pipedrive</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pipedrive Integration</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Paste your personal API token from Pipedrive to connect your CRM.
         </p>
       </div>
     </template>
 
-    <div class="space-y-4">
+    <UForm :state="state" class="space-y-4" @submit.prevent="saveToken">
       <UFormField label="Pipedrive API Token" name="pipedriveToken">
         <UInput
-          v-model="pipedriveToken"
+          v-model="state.pipedriveToken"
           type="text"
           placeholder="Paste your token here"
           icon="i-lucide-key"
@@ -67,11 +76,15 @@ async function saveToken() {
       </UFormField>
 
       <UButton
+        type="submit"
         label="Save Token"
         color="primary"
         :loading="loading"
-        @click="saveToken"
       />
-    </div>
+
+      <div v-if="saved" class="text-green-600 text-sm mt-2">
+        ✅ Token saved successfully!
+      </div>
+    </UForm>
   </UCard>
 </template>
