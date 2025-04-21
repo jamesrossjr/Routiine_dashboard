@@ -10,7 +10,7 @@ const state = reactive({
 })
 
 async function saveToken() {
-  await $fetch('/api/set-token', {
+  await $fetch('/api/set-tokens', {
     method: 'POST',
     body: { token: state.token } // use state.token instead of token.value
   })
