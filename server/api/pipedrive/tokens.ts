@@ -1,7 +1,8 @@
 // File: /server/api/pipedrive/tokens.ts
 import { defineEventHandler, readBody, getCookie, setCookie } from 'h3'
+import type { H3Event } from 'h3'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: H3Event) => {
   if (event.method === 'POST') {
     const body = await readBody(event)
     const token = body.token?.trim()
@@ -10,11 +11,13 @@ export default defineEventHandler(async (event) => {
       return { error: 'Missing token' }
     }
 
-    // Store token (cookie-based for now)
+    // Store token in cookie (temporary)
     setCookie(event, 'pipedrive_token', token, {
       httpOnly: true,
       path: '/',
-      maxAge: 60 * 60 * 24 * 30 // 30 days
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
     })
 
     return { status: 'success' }
@@ -23,19 +26,6 @@ export default defineEventHandler(async (event) => {
   if (event.method === 'GET') {
     const token = getCookie(event, 'pipedrive_token')
     return { token }
-  }
-  
-  async function saveToken() {
-    try {
-      const res = await $fetch('/api/pipedrive/tokens', {
-        method: 'POST',
-        body: { token: state.token }
-      })
-      console.log('Token save response:', res)
-      saved.value = true
-    } catch (err) {
-      console.error('Token save failed:', err)
-    }
   }
 
   return { error: 'Unsupported method' }

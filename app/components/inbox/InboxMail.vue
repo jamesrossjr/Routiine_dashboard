@@ -84,10 +84,10 @@ function onSubmit() {
     <div class="flex flex-col sm:flex-row justify-between gap-1 p-4 sm:px-6 border-b border-(--ui-border)">
       <div class="flex items-start gap-4 sm:my-1.5">
         <UAvatar
-          v-bind="mail.from.avatar"
+          :src="mail.from.avatar"
           :alt="mail.from.name"
           size="3xl"
-        />
+        />  
 
         <div class="min-w-0">
           <p class="font-semibold text-(--ui-text-highlighted)">

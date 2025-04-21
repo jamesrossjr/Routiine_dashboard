@@ -15,6 +15,8 @@
     "@iconify-json/lucide": "^1.2.34",
     "@iconify-json/simple-icons": "^1.2.30",
     "@nuxt/ui-pro": "^3.0.2",
+    "@nuxtjs/supabase": "^1.5.0",
+    "@supabase/supabase-js": "^2.49.4",
     "@unovis/ts": "^1.5.1",
     "@unovis/vue": "^1.5.1",
     "@vueuse/nuxt": "^13.0.0",
