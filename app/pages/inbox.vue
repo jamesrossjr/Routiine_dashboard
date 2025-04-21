@@ -1,55 +1,51 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { breakpointsTailwind } from '@vueuse/core'
+import { ref, computed, watch } from 'vue'
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import type { Mail } from '~/types'
 
-const tabItems = [{
-  label: 'All',
-  value: 'all'
-}, {
-  label: 'Unread',
-  value: 'unread'
-}]
-const selectedTab = ref('all')
+const selectedTab = ref<'all' | 'unread'>('all')
+const selectedMail = ref<Mail | null>(null)
 
-const { data: mails } = await useFetch<Mail[]>('/api/mails', { default: () => [] })
+const tabItems = [
+  { label: 'All', value: 'all' },
+  { label: 'Unread', value: 'unread' }
+]
 
-// Filter mails based on the selected tab
+const { data: mails } = await useFetch<Mail[]>('/api/mails', {
+  default: () => []
+})
+
+// 🔍 Filter by tab
 const filteredMails = computed(() => {
-  if (selectedTab.value === 'unread') {
-    return mails.value.filter(mail => !!mail.unread)
-  }
-
-  return mails.value
+  return selectedTab.value === 'unread'
+    ? mails.value.filter(mail => mail.unread)
+    : mails.value
 })
 
-const selectedMail = ref<Mail | null>()
+// 📱 Breakpoint handling for mobile view
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const isMobile = breakpoints.smaller('lg')
 
+// 🧠 Slideover panel control (for mobile)
 const isMailPanelOpen = computed({
-  get() {
-    return !!selectedMail.value
-  },
-  set(value: boolean) {
-    if (!value) {
-      selectedMail.value = null
-    }
+  get: () => !!selectedMail.value,
+  set: (open) => {
+    if (!open) selectedMail.value = null
   }
 })
 
-// Reset selected mail if it's not in the filtered mails
+// 🧹 Reset selected mail if filtered out
 watch(filteredMails, () => {
-  if (!filteredMails.value.find(mail => mail.id === selectedMail.value?.id)) {
+  if (selectedMail.value && !filteredMails.value.some(m => m.id === selectedMail.value?.id)) {
     selectedMail.value = null
   }
 })
-
-const breakpoints = useBreakpoints(breakpointsTailwind)
-const isMobile = breakpoints.smaller('lg')
 </script>
 
 <template>
+  <!-- Left Panel -->
   <UDashboardPanel
-    id="inbox-1"
+    id="inbox"
     :default-size="25"
     :min-size="20"
     :max-size="30"
@@ -59,6 +55,7 @@ const isMobile = breakpoints.smaller('lg')
       <template #leading>
         <UDashboardSidebarCollapse />
       </template>
+
       <template #trailing>
         <UBadge :label="filteredMails.length" variant="subtle" />
       </template>
@@ -68,19 +65,28 @@ const isMobile = breakpoints.smaller('lg')
           v-model="selectedTab"
           :items="tabItems"
           class="w-32"
-          :content="false"
           size="xs"
+          :content="false"
         />
       </template>
     </UDashboardNavbar>
+
     <InboxList v-model="selectedMail" :mails="filteredMails" />
   </UDashboardPanel>
 
-  <InboxMail v-if="selectedMail" :mail="selectedMail" @close="selectedMail = null" />
-  <div v-else class="hidden lg:flex flex-1 items-center justify-center">
+  <!-- Right Panel (desktop) -->
+  <InboxMail
+    v-if="selectedMail && !isMobile"
+    :mail="selectedMail"
+    @close="selectedMail = null"
+  />
+
+  <!-- Placeholder when no mail is selected -->
+  <div v-else-if="!isMobile" class="hidden lg:flex flex-1 items-center justify-center">
     <UIcon name="i-lucide-inbox" class="size-32 text-(--ui-text-dimmed)" />
   </div>
 
+  <!-- Slideover (mobile) -->
   <ClientOnly>
     <USlideover v-if="isMobile" v-model:open="isMailPanelOpen">
       <template #content>
