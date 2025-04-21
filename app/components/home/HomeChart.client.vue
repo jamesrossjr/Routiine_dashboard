@@ -42,11 +42,12 @@ const total = computed(() => data.value.reduce((acc: number, { amount }) => acc 
 const formatNumber = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
 
 const formatDate = (date: Date): string => {
-  return ({
+  const map = {
     daily: format(date, 'd MMM'),
     weekly: format(date, 'd MMM'),
-    monthly: format(date, 'MMM yyy')
-  })[props.period]
+    monthly: format(date, 'MMM yyyy')
+  }
+  return map[props.period as 'daily' | 'weekly' | 'monthly'] ?? format(date, 'd MMM')
 }
 
 const xTicks = (i: number) => {
