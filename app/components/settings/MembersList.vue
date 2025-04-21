@@ -13,6 +13,19 @@ const items = [{
   color: 'error' as const,
   onSelect: () => console.log('Remove member')
 }]
+
+// Helper function to handle different avatar types
+function getAvatarProps(avatar: string | object | undefined) {
+  if (!avatar) {
+    return {}
+  }
+  
+  if (typeof avatar === 'string') {
+    return { src: avatar }
+  }
+  
+  return avatar
+}
 </script>
 
 <template>
@@ -24,7 +37,7 @@ const items = [{
     >
       <div class="flex items-center gap-3 min-w-0">
         <UAvatar
-          v-bind="member.avatar"
+          v-bind="getAvatarProps(member.avatar)"
           size="md"
         />
 

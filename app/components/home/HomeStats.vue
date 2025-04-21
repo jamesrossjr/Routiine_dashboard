@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Period, Range, Stat } from '~/types'
+import type { Period, Range, Stat} from '~/types'
 
 const props = defineProps<{
   period: Period
@@ -70,7 +70,7 @@ const { data: stats } = await useAsyncData<Stat[]>('stats', async () => {
       :key="index"
       :icon="stat.icon"
       :title="stat.title"
-      to="/customers"
+      to="/opportunities"
       variant="subtle"
       :ui="{
         container: 'gap-y-1.5',
